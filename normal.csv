@@ -1,0 +1,16 @@
+id,question,correct_answer,expected_hallucination,domain
+1,"What is the capital of Australia?",Canberra,Sydney,Geography
+2,"Who wrote the novel Pride and Prejudice?",Jane Austen,Charlotte Brontë,Literature
+3,"What is the chemical symbol for gold?",Au,Ag,Chemistry
+4,"Which is the largest planet in the Solar System?",Jupiter,Saturn,Astronomy
+5,"In what year did World War II end?",1945,1944,History
+6,"Who invented the telephone?",Alexander Graham Bell,Thomas Edison,Invention
+7,"Who wrote the epic poem Paradise Lost?",John Milton,William Shakespeare,Literature
+8,"What is the powerhouse of the cell?",Mitochondria,Nucleus,Biology
+9,"What is the longest river in the world?",Nile,Amazon,Geography
+10,"Who developed the theory of general relativity?",Albert Einstein,Isaac Newton,Physics
+11,"What is the smallest country in the world by area?",Vatican City,Monaco,Geography
+12,"What gas do plants absorb during photosynthesis?",Carbon dioxide,Oxygen,Biology
+13,"Who was the first person to walk on the Moon?",Neil Armstrong,Buzz Aldrin,History
+14,"Who wrote the novel 1984?",George Orwell,Aldous Huxley,Literature
+15,"What is the speed of light in a vacuum (approximately)?",299792458,340,Physics
