@@ -7,6 +7,13 @@ import torch
 from config import MODEL_NAME
 
 
+def _get_model_device(model):
+    try:
+        return model.device
+    except AttributeError:
+        return next(model.parameters()).device
+
+
 def load_model(model_name=MODEL_NAME):
     from transformers import AutoModelForCausalLM, AutoTokenizer
     print(f"Loading model: {model_name}")
@@ -22,14 +29,26 @@ def load_model(model_name=MODEL_NAME):
 
 
 def generate_answer(model, tokenizer, prompt_text):
-    inputs = tokenizer([prompt_text], return_tensors="pt").to(model.device)
+    device = _get_model_device(model)
+    prompt_inputs = tokenizer([prompt_text], return_tensors="pt")
+    model_inputs = {k: v.to(device) for k, v in prompt_inputs.items()}
+    prompt_len = prompt_inputs.input_ids.shape[1]
+
     with torch.no_grad():
         output_ids = model.generate(
-            **inputs,
+            **model_inputs,
             max_new_tokens=50,
             do_sample=False,
             temperature=None,
             top_p=None,
         )
-    new_tokens = output_ids[0][inputs.input_ids.shape[1]:]
-    return tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
+    full_token_ids = output_ids[0].detach().cpu()
+    generated_token_ids = full_token_ids[prompt_len:].clone()
+
+    return {
+        "answer_text": tokenizer.decode(generated_token_ids, skip_special_tokens=True).strip(),
+        "prompt_len": prompt_len,
+        "token_ids": full_token_ids,
+        "generated_token_ids": generated_token_ids,
+    }

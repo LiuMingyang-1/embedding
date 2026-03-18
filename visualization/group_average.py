@@ -1,6 +1,6 @@
 # visualization/group_average.py
 # 图2：分组平均层曲线。
-# 将所有正确答案 token 和所有错误答案 token 分别按层取均值，
+# 将所有正确回答和错误回答样本的“整段生成内容平均曲线”分别按层取均值，
 # 画出带 std 阴影的对比曲线，展示两组在三个维度上的系统性差异。
 
 import numpy as np
@@ -9,11 +9,11 @@ import matplotlib.pyplot as plt
 from config import FIGURES_DIR
 
 
-def plot_group_average(all_records):
+def plot_group_average(sample_records):
     FIGURES_DIR.mkdir(exist_ok=True)
 
-    correct = [r for r in all_records if r["is_correct"]]
-    wrong = [r for r in all_records if not r["is_correct"]]
+    correct = [r for r in sample_records if r["is_correct"]]
+    wrong = [r for r in sample_records if not r["is_correct"]]
 
     if not correct or not wrong:
         print("[fig2] Not enough samples in one group. Skipping.")
@@ -26,7 +26,7 @@ def plot_group_average(all_records):
     ]
 
     fig, axes = plt.subplots(3, 1, figsize=(10, 10))
-    fig.suptitle("Group Average Layer Curves", fontsize=14)
+    fig.suptitle("Group Average Layer Curves  (Whole Response Average)", fontsize=14)
 
     for ax, (key, ylabel, title) in zip(axes, panels):
         c_arr = np.array([r[key] for r in correct])

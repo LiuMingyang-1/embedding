@@ -1,41 +1,38 @@
 # visualization/single_example.py
 # 图1：单样例配对对比。
 # 选取同一 id 中 normal=正确、induced=错误的一对样本，
-# 画出答案 token 在各层的三个指标曲线，直观展示幻觉 vs 非幻觉的内部状态差异。
+# 画出整段生成内容按 token 平均后的层曲线，直观展示幻觉 vs 非幻觉的内部状态差异。
 
 import numpy as np
 import matplotlib.pyplot as plt
-import pandas as pd
 
 from config import FIGURES_DIR
 
 
-def plot_single_example(all_records, results_df):
+def plot_single_example(sample_records):
     FIGURES_DIR.mkdir(exist_ok=True)
+
+    records_by_key = {(r["id"], r["type"]): r for r in sample_records}
 
     # Find a pair: same id, normal=correct, induced=wrong
     pair_id = None
-    for sid in results_df["id"].unique():
-        sub = results_df[results_df["id"] == sid]
-        normal_ok = sub[(sub["type"] == "normal") & sub["is_correct"]]
-        induced_fail = sub[(sub["type"] == "induced") & ~sub["is_correct"]]
-        if not normal_ok.empty and not induced_fail.empty:
+    correct_rec = None
+    wrong_rec = None
+    for sid in sorted({r["id"] for r in sample_records}):
+        normal_rec = records_by_key.get((sid, "normal"))
+        induced_rec = records_by_key.get((sid, "induced"))
+        if normal_rec and induced_rec and normal_rec["is_correct"] and not induced_rec["is_correct"]:
             pair_id = sid
+            correct_rec = normal_rec
+            wrong_rec = induced_rec
             break
 
     if pair_id is None:
         print("[fig1] No ideal pair (normal correct, induced wrong) found. Skipping.")
         return
 
-    correct_rec = next((r for r in all_records if r["id"] == pair_id and r["is_correct"]), None)
-    wrong_rec = next((r for r in all_records if r["id"] == pair_id and not r["is_correct"]), None)
-
-    if correct_rec is None or wrong_rec is None:
-        print("[fig1] Missing records for chosen pair. Skipping.")
-        return
-
     fig, axes = plt.subplots(3, 1, figsize=(10, 10))
-    fig.suptitle(f"Single Example Comparison  (id={pair_id})", fontsize=14)
+    fig.suptitle(f"Single Example Comparison  (Whole Response Average, id={pair_id})", fontsize=14)
 
     panels = [
         ("mismatch_curve",    "Mismatch\n(1 − cos(Δh, context))", "Dim 1: Update Direction Mismatch"),

@@ -5,6 +5,9 @@
 #   1. Mann-Whitney U 检验：每个指标在正确/错误回答组之间的差异（p-value）
 #   2. Spearman 相关：三指标之间的相关性
 #      |ρ| < 0.5 → 互补；|ρ| > 0.8 → 冗余
+#
+# 注意：输入应为 sample-level records（每个回答一条）。
+# 当前主分析对象为整段生成内容，对所有生成内容 token 取平均。
 
 import numpy as np
 from scipy.stats import mannwhitneyu, spearmanr
@@ -24,8 +27,8 @@ def run_statistics(all_records):
         return
 
     metrics = [
-        ("mismatch_mean",          "Mismatch (mean across layers)   "),
-        ("attn_drift_mean",        "AttnDrift (mean across layers)  "),
+        ("mismatch_mean",          "Mismatch (whole response)       "),
+        ("attn_drift_mean",        "AttnDrift (whole response)      "),
         ("update_norm_late_mean",  "UpdateNorm late mean            "),
         ("update_norm_late_slope", "UpdateNorm late slope           "),
     ]
@@ -41,7 +44,7 @@ def run_statistics(all_records):
         sig = "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else ""
         print(f"{label} {np.mean(c_vals):>8.4f} {np.mean(w_vals):>8.4f} {p:>10.4f} {sig:>5}")
 
-    print("\n--- Spearman Correlation Between Metrics (all tokens) ---")
+    print("\n--- Spearman Correlation Between Metrics (sample-level) ---")
     m1 = [r["mismatch_mean"] for r in all_records]
     m2 = [r["attn_drift_mean"] for r in all_records]
     m3 = [r["update_norm_late_mean"] for r in all_records]

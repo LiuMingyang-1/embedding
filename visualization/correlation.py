@@ -2,6 +2,9 @@
 # 图4：三指标之间的 Spearman 相关热力图。
 # 验证互补性：中等相关 (|ρ| < 0.5) 说明三个维度捕捉了不同信息；
 # 高度相关 (|ρ| > 0.8) 则说明存在冗余。
+#
+# 输入应为 sample-level records。
+# 默认主分析对象为整段生成内容。
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,14 +12,14 @@ from scipy.stats import spearmanr
 
 from config import FIGURES_DIR
 
-METRIC_LABELS = ["Mismatch\n(mean)", "AttnDrift\n(mean)", "UpdateNorm\nlate_mean"]
+METRIC_LABELS = ["Mismatch\n(whole response)", "AttnDrift\n(whole response)", "UpdateNorm\nlate_mean"]
 METRIC_KEYS = ["mismatch_mean", "attn_drift_mean", "update_norm_late_mean"]
 
 
-def plot_correlation_matrix(all_records):
+def plot_correlation_matrix(sample_records):
     FIGURES_DIR.mkdir(exist_ok=True)
 
-    data = np.array([[r[k] for k in METRIC_KEYS] for r in all_records])
+    data = np.array([[r[k] for k in METRIC_KEYS] for r in sample_records])
     n = len(METRIC_KEYS)
     corr = np.zeros((n, n))
     for i in range(n):
@@ -25,7 +28,7 @@ def plot_correlation_matrix(all_records):
             corr[i, j] = rho
 
     fig, ax = plt.subplots(figsize=(6, 5))
-    fig.suptitle("Spearman Correlation Between Three Metrics", fontsize=13)
+    fig.suptitle("Spearman Correlation Between Three Metrics  (Whole Response Average)", fontsize=13)
 
     try:
         import seaborn as sns

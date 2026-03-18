@@ -15,7 +15,9 @@ from scipy.spatial.distance import jensenshannon
 def _get_attn_dist(attentions, layer_idx, token_pos):
     """提取第 layer_idx 层 token_pos 的注意力分布（归一化概率向量）。"""
     attn_avg = attentions[layer_idx].mean(dim=0)         # (seq_len, seq_len)
-    attn_row = attn_avg[token_pos, :token_pos + 1].numpy().astype(np.float64)
+    attn_row = attn_avg[token_pos, :token_pos].numpy().astype(np.float64)
+    if len(attn_row) == 0:
+        return np.ones(1, dtype=np.float64)
     attn_row = np.maximum(attn_row, 0)
     s = attn_row.sum()
     return attn_row / s if s > 1e-10 else np.ones(len(attn_row)) / len(attn_row)
