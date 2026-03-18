@@ -113,17 +113,33 @@ def _iter_batches(records, batch_size):
         yield records[start:start + batch_size]
 
 
-def run_extraction():
+def _save_results_csv(results, extra_columns):
+    results_df = pd.DataFrame(results)
+    ordered_columns = RESULTS_BASE_COLUMNS + extra_columns
+    if results_df.empty:
+        results_df = pd.DataFrame(columns=ordered_columns)
+    else:
+        results_df = results_df[ordered_columns]
+    results_df.to_csv(RESULTS_CSV, index=False)
+    return results_df
+
+
+def run_extraction(limit=None):
     model, tokenizer = load_model(MODEL_NAME)
     STATES_DIR.mkdir(exist_ok=True)
 
     dataset_df = _load_dataset()
+    if limit is not None:
+        if limit <= 0:
+            raise ValueError(f"--limit must be a positive integer, got {limit}")
+        dataset_df = dataset_df.head(limit).copy()
     existing_rows, extra_columns = _load_existing_results()
 
     results = []
     preserved_manual_labels = 0
 
-    print(f"\n=== Processing {DATASET_CSV} with batch_size={EXTRACTION_BATCH_SIZE} ===")
+    limit_text = f", limit={limit}" if limit is not None else ""
+    print(f"\n=== Processing {DATASET_CSV} with batch_size={EXTRACTION_BATCH_SIZE}{limit_text} ===")
     dataset_records = dataset_df.to_dict("records")
 
     for batch_rows in _iter_batches(dataset_records, EXTRACTION_BATCH_SIZE):
@@ -193,10 +209,10 @@ def run_extraction():
                 result_row[col] = existing_row.get(col, "")
             results.append(result_row)
 
-    results_df = pd.DataFrame(results)
-    ordered_columns = RESULTS_BASE_COLUMNS + extra_columns
-    results_df = results_df[ordered_columns]
-    results_df.to_csv(RESULTS_CSV, index=False)
+        results_df = _save_results_csv(results, extra_columns)
+        print(f"  Partial results saved: {len(results_df)} sample(s) -> {RESULTS_CSV}")
+
+    results_df = _save_results_csv(results, extra_columns)
 
     print(f"\nGenerated {len(results_df)} samples.")
     print(f"Results saved to {RESULTS_CSV}")

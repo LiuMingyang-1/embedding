@@ -63,12 +63,18 @@ def main():
         help="extract: run model inference and export a CSV for manual hallucination labeling (GPU required); "
              "analyze: compute metrics & plots from manually labeled CSV (CPU only)",
     )
+    parser.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Only used with --stage extract. Process the first N dataset rows, e.g. --limit 20",
+    )
     args = parser.parse_args()
 
     if args.stage == "extract":
         from extraction.states import run_extraction
 
-        run_extraction()
+        run_extraction(limit=args.limit)
         return
 
     if args.stage == "analyze":

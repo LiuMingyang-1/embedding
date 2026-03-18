@@ -86,6 +86,9 @@ LateMean  = 后 k 层 UpdateNorm 的均值
 # 阶段 A：云上跑（需 GPU）
 python3 main.py --stage extract
 
+# 只先试跑前 20 条，并且会在每个 batch 后刷新 results_all.csv
+python3 main.py --stage extract --limit 20
+
 # 阶段 B：人工标注
 # 在 results_all.csv 里填写 manual_has_hallucination
 
