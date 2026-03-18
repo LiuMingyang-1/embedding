@@ -1,12 +1,18 @@
 # metrics/mismatch.py
-# 维度 1：状态更新方向偏离（Mismatch）
+# 维度 1：状态更新与 attention-context 的不对齐程度（Mismatch）
 #
-# 关注：模型在更新某个 token 的表示时，更新方向是否偏离了上下文聚合方向。
-# 幻觉假说：产生幻觉时，更新方向更多由模型内部记忆驱动，而非上下文，导致 Mismatch 偏高。
+# 关注：模型在更新某个 token 的表示时，更新方向是否与该层 attention
+# 聚合得到的上下文向量一致。
+# 注意：Mismatch 是一个几何对齐度指标。它只说明更新方向与 attention-context
+# 是否一致，不直接等价于“更依赖上下文”或“更容易幻觉”。
 #
 # Mismatch_i(t) = 1 - cos(Δh_i(t), c_i(t))
 #   Δh_i(t) = h_i(t) - h_{i-1}(t)            实际更新向量
-#   c_i(t)  = Σ_j α_{i,t,j} · h_{i-1}(j)     上下文聚合方向（attention 加权的上一层表示）
+#   c_i(t)  = Σ_j α_{i,t,j} · h_{i-1}(j)     attention 聚合的上下文向量
+#
+# 因此：
+#   Mismatch 越小 → Δh 与 c 越同向
+#   Mismatch 越大 → Δh 与 c 越不一致
 #
 # 注意：attention 用第 i 层的权重（按 head 取均值），hidden states 用第 i-1 层。
 

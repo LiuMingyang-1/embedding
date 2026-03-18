@@ -20,7 +20,7 @@ def plot_group_average(sample_records):
         return
 
     panels = [
-        ("mismatch_curve",    "Mismatch\n(1 − cos(Δh, context))", "Dim 1: Update Direction Mismatch"),
+        ("mismatch_curve",    "Mismatch\n(1 − cos(Δh, context))", "Dim 1: Update-Context Misalignment"),
         ("attn_drift_curve",  "AttnDrift (JS²)",                  "Dim 2: Attention Structure Drift"),
         ("update_norm_curve", "UpdateNorm (‖Δh‖)",               "Dim 3: Representation Stabilization"),
     ]

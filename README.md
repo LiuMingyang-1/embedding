@@ -50,7 +50,7 @@ id,prompt_text,reference_answer
 
 ## 三个内部动态维度
 
-### 维度 1：更新方向偏离（Mismatch）
+### 维度 1：更新-上下文不对齐（Mismatch）
 
 ```text
 Mismatch_i(t) = 1 - cos(Δh_i(t), c_i(t))
@@ -59,7 +59,9 @@ Mismatch_i(t) = 1 - cos(Δh_i(t), c_i(t))
 c_i(t)  = Σ_j α_{i,t,j} · h_{i-1}(j)
 ```
 
-直觉：正常情况下，表示更新应更贴近上下文聚合方向；幻觉时偏离会更大。
+直觉：该指标衡量某层对 token 的表示更新，是否与该层 attention 聚合出的上下文向量一致。
+`Mismatch` 越小，说明更新方向与该上下文向量越接近；`Mismatch` 越大，说明两者越不一致。
+它描述的是一种“更新-上下文对齐度”，而不是对“是否依赖上下文”或“是否幻觉”的直接判定。
 
 ### 维度 2：注意力结构漂移（AttnDrift）
 
