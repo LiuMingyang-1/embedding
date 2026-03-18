@@ -54,6 +54,14 @@ def extract_states(model, token_ids):
             output_attentions=True,
         )
 
+    if outputs.attentions is None or len(outputs.attentions) == 0:
+        raise ValueError(
+            "Model forward pass did not return attentions. "
+            "This analysis pipeline requires per-layer attention weights. "
+            "Use an attention implementation that materializes attentions "
+            "(for example attn_implementation='eager') and rerun --stage extract."
+        )
+
     # Move to CPU immediately to free GPU memory
     hidden_states = tuple(h[0].cpu().float() for h in outputs.hidden_states)
     attentions = tuple(a[0].cpu().float() for a in outputs.attentions)

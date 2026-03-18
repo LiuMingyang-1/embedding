@@ -126,6 +126,16 @@ def compute_sample_metrics(data):
     token_ids = data["token_ids"]
     sample_has_hallucination = data["has_hallucination"]
 
+    expected_num_attn_layers = len(hidden_states) - 1
+    actual_num_attn_layers = len(attentions)
+    if actual_num_attn_layers != expected_num_attn_layers:
+        raise ValueError(
+            f"State file for id={data['id']} has inconsistent layer counts: "
+            f"{len(hidden_states)} hidden-state tensors but {actual_num_attn_layers} attention tensors. "
+            "This usually means extraction did not actually save attention weights. "
+            "Rerun --stage extract after forcing an attention implementation that returns attentions."
+        )
+
     response_info = _get_response_info(data)
     positions = response_info["positions"]
     first_position = response_info["first_position"]

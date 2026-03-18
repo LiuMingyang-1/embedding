@@ -26,6 +26,9 @@ def load_model(model_name=MODEL_NAME):
         model_name,
         torch_dtype=torch.bfloat16,
         device_map="auto",
+        # Some optimized attention backends do not materialize attention weights.
+        # This project requires per-layer attentions for metric computation.
+        attn_implementation="eager",
         trust_remote_code=True,
     )
     model.generation_config.pad_token_id = tokenizer.pad_token_id
