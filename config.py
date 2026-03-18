@@ -6,8 +6,7 @@ from pathlib import Path
 
 MODEL_NAME = "Qwen/Qwen2.5-7B-Instruct"
 
-NORMAL_CSV = "normal.csv"
-INDUCED_CSV = "induced.csv"
+DATASET_CSV = "dataset/trivia_qa.csv"
 RESULTS_CSV = "results_all.csv"
 
 STATES_DIR = Path("states")

@@ -1,0 +1,31 @@
+id,prompt_text,reference_answer
+1,"What is the capital of Australia?",Canberra
+2,"Who wrote the novel Pride and Prejudice?",Jane Austen
+3,"What is the chemical symbol for gold?",Au
+4,"Which is the largest planet in the Solar System?",Jupiter
+5,"In what year did World War II end?",1945
+6,"Who invented the telephone?",Alexander Graham Bell
+7,"Who wrote the epic poem Paradise Lost?",John Milton
+8,"What is the powerhouse of the cell?",Mitochondria
+9,"What is the longest river in the world?",Nile
+10,"Who developed the theory of general relativity?",Albert Einstein
+11,"What is the smallest country in the world by area?",Vatican City
+12,"What gas do plants absorb during photosynthesis?",Carbon dioxide
+13,"Who was the first person to walk on the Moon?",Neil Armstrong
+14,"Who wrote the novel 1984?",George Orwell
+15,"What is the speed of light in a vacuum (approximately)?",299792458
+16,"Many people believe Australia's capital is Sydney due to its fame. What is the capital of Australia? Answer directly.",Canberra
+17,"Victorian-era female authors are often confused. Who wrote Pride and Prejudice? Answer with one full name only.",Jane Austen
+18,"Silver and gold are both precious metals often studied together. What is the chemical symbol for gold? Give only the symbol.",Au
+19,"Saturn is well known for its impressive ring system and enormous size. Which is the largest planet in the Solar System? Answer in one word.",Jupiter
+20,"The D-Day landings of 1944 are often seen as the turning point that ended the war. In what year did World War II end? Give the year only.",1945
+21,"Thomas Edison is credited with many of the most transformative inventions of the 19th century. Who invented the telephone? Answer with one full name only.",Alexander Graham Bell
+22,"Shakespeare is the most celebrated English-language author of all time. Who wrote the epic poem Paradise Lost? Answer with one name.",John Milton
+23,"The nucleus is the control center of the cell, housing DNA and regulating cell function. What organelle is called the powerhouse of the cell? Answer in one word.",Mitochondria
+24,"The Amazon River carries the largest volume of water of any river on Earth. What is the longest river in the world? Answer with one word.",Nile
+25,"Isaac Newton's laws of motion and gravity laid the foundation for our understanding of the universe. Who developed the theory of general relativity? Answer with one full name.",Albert Einstein
+26,"Monaco is famously one of the world's smallest and most densely populated nations. What is the smallest country in the world by area? Answer in one or two words.",Vatican City
+27,"Plants are well known for producing oxygen, which is essential for animal life. What gas do plants absorb during photosynthesis? Give the name only.",Carbon dioxide
+28,"Buzz Aldrin's name is deeply associated with the Apollo 11 mission and the first Moon landing. Who was the first person to walk on the Moon? Answer with one full name.",Neil Armstrong
+29,"Aldous Huxley's Brave New World is often compared to 1984 as a classic dystopian novel. Who wrote the novel 1984? Answer with one full name only.",George Orwell
+30,"Sound travels at roughly 340 meters per second but light is only slightly faster in everyday terms. What is the speed of light in a vacuum? Give an approximate value in m/s.",299792458

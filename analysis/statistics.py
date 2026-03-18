@@ -2,7 +2,7 @@
 # 统计检验：验证三个维度在幻觉 vs 非幻觉样本之间是否有显著差异，以及是否互补。
 #
 # run_statistics:
-#   1. Mann-Whitney U 检验：每个指标在正确/错误回答组之间的差异（p-value）
+#   1. Mann-Whitney U 检验：每个指标在非幻觉/幻觉组之间的差异（p-value）
 #   2. Spearman 相关：三指标之间的相关性
 #      |ρ| < 0.5 → 互补；|ρ| > 0.8 → 冗余
 #
@@ -14,15 +14,18 @@ from scipy.stats import mannwhitneyu, spearmanr
 
 
 def run_statistics(all_records):
-    correct = [r for r in all_records if r["is_correct"]]
-    wrong = [r for r in all_records if not r["is_correct"]]
+    non_hallucinated = [r for r in all_records if not r["has_hallucination"]]
+    hallucinated = [r for r in all_records if r["has_hallucination"]]
 
     print("\n" + "=" * 65)
     print("STATISTICS")
     print("=" * 65)
-    print(f"Correct samples: {len(correct)},  Wrong samples: {len(wrong)}")
+    print(
+        f"Non-hallucination samples: {len(non_hallucinated)},  "
+        f"Hallucination samples: {len(hallucinated)}"
+    )
 
-    if not correct or not wrong:
+    if not non_hallucinated or not hallucinated:
         print("Not enough samples for statistics.")
         return
 
@@ -33,16 +36,16 @@ def run_statistics(all_records):
         ("update_norm_late_slope", "UpdateNorm late slope           "),
     ]
 
-    print("\n--- Mann-Whitney U Test (correct vs wrong) ---")
-    print(f"{'Metric':<38} {'Correct':>8} {'Wrong':>8} {'p-value':>10} {'':>5}")
+    print("\n--- Mann-Whitney U Test (non-hallucination vs hallucination) ---")
+    print(f"{'Metric':<38} {'Non-H':>8} {'Hall':>8} {'p-value':>10} {'':>5}")
     print("-" * 73)
 
     for key, label in metrics:
-        c_vals = [r[key] for r in correct]
-        w_vals = [r[key] for r in wrong]
-        _, p = mannwhitneyu(c_vals, w_vals, alternative="two-sided")
+        nh_vals = [r[key] for r in non_hallucinated]
+        h_vals = [r[key] for r in hallucinated]
+        _, p = mannwhitneyu(nh_vals, h_vals, alternative="two-sided")
         sig = "***" if p < 0.001 else "**" if p < 0.01 else "*" if p < 0.05 else ""
-        print(f"{label} {np.mean(c_vals):>8.4f} {np.mean(w_vals):>8.4f} {p:>10.4f} {sig:>5}")
+        print(f"{label} {np.mean(nh_vals):>8.4f} {np.mean(h_vals):>8.4f} {p:>10.4f} {sig:>5}")
 
     print("\n--- Spearman Correlation Between Metrics (sample-level) ---")
     m1 = [r["mismatch_mean"] for r in all_records]

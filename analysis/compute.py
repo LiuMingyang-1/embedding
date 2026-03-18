@@ -1,6 +1,6 @@
 # analysis/compute.py
 # 对单个样本的每个生成内容 token 计算全部三个维度的指标，返回结构化 record 列表。
-# 加载所有 states/*.pt 文件后，对每个样本调用 compute_sample_metrics，
+# 加载所有 states/sample_*.pt 文件后，对每个样本调用 compute_sample_metrics，
 # 再把整段生成内容按 token 聚合成 sample-level record，供可视化和统计分析使用。
 
 import numpy as np
@@ -58,21 +58,21 @@ def _parse_manual_label(value):
     text = str(value).strip().lower()
     if not text or text in {"nan", "none", "null"}:
         return None
-    if text in {"1", "true", "t", "yes", "y", "correct"}:
+    if text in {"1", "true", "t", "yes", "y", "hallucination", "hallucinated"}:
         return True
-    if text in {"0", "false", "f", "no", "n", "wrong", "incorrect"}:
+    if text in {"0", "false", "f", "no", "n", "non-hallucination", "not_hallucination"}:
         return False
 
     raise ValueError(
-        f"Unsupported manual_is_correct value: {value!r}. "
-        "Use 1/0, true/false, yes/no, or correct/wrong."
+        f"Unsupported manual_has_hallucination value: {value!r}. "
+        "Use 1/0, true/false, yes/no, or hallucination/non-hallucination."
     )
 
 
 def build_manual_label_lookup(results_df):
-    if "manual_is_correct" not in results_df.columns:
+    if "manual_has_hallucination" not in results_df.columns:
         raise ValueError(
-            "results_all.csv is missing the 'manual_is_correct' column. "
+            "results_all.csv is missing the 'manual_has_hallucination' column. "
             "Run --stage extract again, then fill that column before --stage analyze."
         )
 
@@ -81,17 +81,17 @@ def build_manual_label_lookup(results_df):
     seen_keys = set()
 
     for row in results_df.itertuples(index=False):
-        key = (int(row.id), str(row.type))
+        key = int(row.id)
         if key in seen_keys:
-            raise ValueError(f"Duplicate row in results_all.csv for id={key[0]}, type={key[1]}.")
+            raise ValueError(f"Duplicate row in results_all.csv for id={key}.")
         seen_keys.add(key)
 
         try:
-            label = _parse_manual_label(getattr(row, "manual_is_correct"))
+            label = _parse_manual_label(getattr(row, "manual_has_hallucination"))
         except ValueError as exc:
             raise ValueError(
-                f"Invalid manual_is_correct value for id={key[0]}, type={key[1]}: "
-                f"{getattr(row, 'manual_is_correct')!r}"
+                f"Invalid manual_has_hallucination value for id={key}: "
+                f"{getattr(row, 'manual_has_hallucination')!r}"
             ) from exc
 
         if label is None:
@@ -101,10 +101,10 @@ def build_manual_label_lookup(results_df):
         labels[key] = label
 
     if missing:
-        preview = ", ".join(f"id={sid} type={sample_type}" for sid, sample_type in missing[:5])
+        preview = ", ".join(f"id={sid}" for sid in missing[:5])
         suffix = "" if len(missing) <= 5 else f", ... (+{len(missing) - 5} more)"
         raise ValueError(
-            "results_all.csv has unlabeled rows in 'manual_is_correct'. "
+            "results_all.csv has unlabeled rows in 'manual_has_hallucination'. "
             f"Fill every row before analyzing. Missing: {preview}{suffix}"
         )
 
@@ -124,7 +124,7 @@ def compute_sample_metrics(data):
     hidden_states = data["hidden_states"]
     attentions = data["attentions"]
     token_ids = data["token_ids"]
-    sample_is_correct = data["is_correct"]
+    sample_has_hallucination = data["has_hallucination"]
 
     response_info = _get_response_info(data)
     positions = response_info["positions"]
@@ -141,8 +141,7 @@ def compute_sample_metrics(data):
 
         records.append({
             "id": data["id"],
-            "type": data["type"],
-            "is_correct": sample_is_correct,
+            "has_hallucination": sample_has_hallucination,
             "token_pos": pos,
             "token_index_in_response": idx,
             "is_first_response_token": pos == first_position,
@@ -166,11 +165,11 @@ def aggregate_sample_records(all_records):
     grouped = {}
 
     for record in all_records:
-        key = (record["id"], record["type"])
+        key = record["id"]
         grouped.setdefault(key, []).append(record)
 
     sample_records = []
-    for (sample_id, sample_type), records in grouped.items():
+    for sample_id, records in grouped.items():
         records = sorted(records, key=lambda r: r["token_index_in_response"])
         response_mismatch_curve = np.stack([r["mismatch_curve"] for r in records]).mean(axis=0)
         response_attn_drift_curve = np.stack([r["attn_drift_curve"] for r in records]).mean(axis=0)
@@ -178,8 +177,7 @@ def aggregate_sample_records(all_records):
 
         sample_records.append({
             "id": sample_id,
-            "type": sample_type,
-            "is_correct": records[0]["is_correct"],
+            "has_hallucination": records[0]["has_hallucination"],
             "num_response_tokens": len(records),
             "response_token_source": records[0]["response_token_source"],
             "response_text": records[0]["response_text"],
@@ -194,14 +192,14 @@ def aggregate_sample_records(all_records):
             "update_norm_late_slope": float(np.mean([r["update_norm_late_slope"] for r in records])),
         })
 
-    return sorted(sample_records, key=lambda r: (r["id"], r["type"]))
+    return sorted(sample_records, key=lambda r: r["id"])
 
 
 def load_all_records(label_lookup):
     """
     从 states/ 目录加载所有样本，计算指标，返回 record 列表。
     """
-    state_files = sorted(STATES_DIR.glob("*.pt"))
+    state_files = sorted(STATES_DIR.glob("sample_*.pt"))
     if not state_files:
         raise FileNotFoundError(f"No .pt files in '{STATES_DIR}'. Run --stage extract first.")
 
@@ -212,16 +210,15 @@ def load_all_records(label_lookup):
     for path in state_files:
         print(f"  {path.name} ...", end=" ", flush=True)
         data = torch.load(path, map_location="cpu")
-        key = (int(data["id"]), str(data["type"]))
+        key = int(data["id"])
         if key not in label_lookup:
-            raise ValueError(
-                f"Missing manual label for id={key[0]}, type={key[1]} in results_all.csv."
-            )
-        data["is_correct"] = label_lookup[key]
+            print("skipped (id not present in results_all.csv)")
+            continue
+        data["has_hallucination"] = label_lookup[key]
         records = compute_sample_metrics(data)
         if not records:
             raise ValueError(
-                f"No generated response tokens found for id={key[0]}, type={key[1]}. "
+                f"No generated response tokens found for id={key}. "
                 "Check whether extraction saved response_token_positions correctly."
             )
         all_records.extend(records)
@@ -230,7 +227,7 @@ def load_all_records(label_lookup):
 
     missing_states = sorted(set(label_lookup) - seen_keys)
     if missing_states:
-        preview = ", ".join(f"id={sid} type={sample_type}" for sid, sample_type in missing_states[:5])
+        preview = ", ".join(f"id={sid}" for sid in missing_states[:5])
         suffix = "" if len(missing_states) <= 5 else f", ... (+{len(missing_states) - 5} more)"
         raise ValueError(
             "results_all.csv contains labeled rows without matching state files. "

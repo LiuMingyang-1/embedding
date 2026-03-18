@@ -1,7 +1,7 @@
 # main.py
 # 入口脚本，通过 --stage 参数控制运行阶段：
 #   extract: 云上 GPU 阶段 — 推理 + 提取 hidden states/attentions，保存到 states/
-#            同时导出 results_all.csv，等待人工填写 manual_is_correct
+#            同时导出 results_all.csv，等待人工填写 manual_has_hallucination
 #   analyze: 本地 CPU 阶段 — 读取人工标注后的 CSV，计算指标，输出统计 + 4 张图
 #
 # 使用方法：
@@ -31,14 +31,15 @@ def run_analysis():
         return
 
     sample_records = aggregate_sample_records(token_records)
-    n_correct = sum(1 for r in sample_records if r["is_correct"])
-    n_wrong = sum(1 for r in sample_records if not r["is_correct"])
+    n_non_hallucinated = sum(1 for r in sample_records if not r["has_hallucination"])
+    n_hallucinated = sum(1 for r in sample_records if r["has_hallucination"])
     avg_response_len = sum(r["num_response_tokens"] for r in sample_records) / len(sample_records)
     n_multi_token = sum(1 for r in sample_records if r["num_response_tokens"] > 1)
     n_content_tokens = sum(1 for r in sample_records if r["response_token_source"] == "generated_content_tokens")
     print(
         f"\nTotal generated response token records: {len(token_records)}"
-        f"\nTotal sample records: {len(sample_records)}  (correct={n_correct}, wrong={n_wrong})"
+        f"\nTotal sample records: {len(sample_records)}"
+        f"  (non_hallucination={n_non_hallucinated}, hallucination={n_hallucinated})"
         f"\nAverage generated response length: {avg_response_len:.2f} token(s)"
         f"\nMulti-token responses: {n_multi_token}"
         f"\nContent-token extraction used in {n_content_tokens} sample(s)"
@@ -59,7 +60,7 @@ def main():
         "--stage",
         choices=["extract", "analyze"],
         required=True,
-        help="extract: run model inference and export a CSV for manual labeling (GPU required); "
+        help="extract: run model inference and export a CSV for manual hallucination labeling (GPU required); "
              "analyze: compute metrics & plots from manually labeled CSV (CPU only)",
     )
     args = parser.parse_args()

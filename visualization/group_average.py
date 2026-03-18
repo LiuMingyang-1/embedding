@@ -1,6 +1,6 @@
 # visualization/group_average.py
 # 图2：分组平均层曲线。
-# 将所有正确回答和错误回答样本的“整段生成内容平均曲线”分别按层取均值，
+# 将所有非幻觉回答和幻觉回答样本的“整段生成内容平均曲线”分别按层取均值，
 # 画出带 std 阴影的对比曲线，展示两组在三个维度上的系统性差异。
 
 import numpy as np
@@ -12,10 +12,10 @@ from config import FIGURES_DIR
 def plot_group_average(sample_records):
     FIGURES_DIR.mkdir(exist_ok=True)
 
-    correct = [r for r in sample_records if r["is_correct"]]
-    wrong = [r for r in sample_records if not r["is_correct"]]
+    non_hallucinated = [r for r in sample_records if not r["has_hallucination"]]
+    hallucinated = [r for r in sample_records if r["has_hallucination"]]
 
-    if not correct or not wrong:
+    if not non_hallucinated or not hallucinated:
         print("[fig2] Not enough samples in one group. Skipping.")
         return
 
@@ -29,20 +29,20 @@ def plot_group_average(sample_records):
     fig.suptitle("Group Average Layer Curves  (Whole Response Average)", fontsize=14)
 
     for ax, (key, ylabel, title) in zip(axes, panels):
-        c_arr = np.array([r[key] for r in correct])
-        w_arr = np.array([r[key] for r in wrong])
+        nh_arr = np.array([r[key] for r in non_hallucinated])
+        h_arr = np.array([r[key] for r in hallucinated])
 
-        c_mean, c_std = c_arr.mean(axis=0), c_arr.std(axis=0)
-        w_mean, w_std = w_arr.mean(axis=0), w_arr.std(axis=0)
+        nh_mean, nh_std = nh_arr.mean(axis=0), nh_arr.std(axis=0)
+        h_mean, h_std = h_arr.mean(axis=0), h_arr.std(axis=0)
 
-        x_c = np.arange(1, len(c_mean) + 1)
-        x_w = np.arange(1, len(w_mean) + 1)
+        x_nh = np.arange(1, len(nh_mean) + 1)
+        x_h = np.arange(1, len(h_mean) + 1)
 
-        ax.plot(x_c, c_mean, color="steelblue", label=f"Correct (n={len(correct)})")
-        ax.fill_between(x_c, c_mean - c_std, c_mean + c_std, alpha=0.2, color="steelblue")
+        ax.plot(x_nh, nh_mean, color="steelblue", label=f"Non-hallucination (n={len(non_hallucinated)})")
+        ax.fill_between(x_nh, nh_mean - nh_std, nh_mean + nh_std, alpha=0.2, color="steelblue")
 
-        ax.plot(x_w, w_mean, color="tomato", linestyle="--", label=f"Wrong (n={len(wrong)})")
-        ax.fill_between(x_w, w_mean - w_std, w_mean + w_std, alpha=0.2, color="tomato")
+        ax.plot(x_h, h_mean, color="tomato", linestyle="--", label=f"Hallucination (n={len(hallucinated)})")
+        ax.fill_between(x_h, h_mean - h_std, h_mean + h_std, alpha=0.2, color="tomato")
 
         ax.set_ylabel(ylabel)
         ax.set_title(title)

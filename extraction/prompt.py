@@ -1,6 +1,6 @@
 # extraction/prompt.py
 # 负责构造输入给模型的 prompt。
-# build_prompt: 将 (question, misleading_prefix) 组装为 chat template 格式的完整字符串。
+# build_prompt: 将单条 prompt_text 组装为 chat template 格式的完整字符串。
 
 SYSTEM_MSG = (
     "You are a helpful assistant. "
@@ -8,10 +8,9 @@ SYSTEM_MSG = (
 )
 
 
-def build_prompt(tokenizer, question, misleading_prefix=None):
-    content = f"{misleading_prefix} {question}" if misleading_prefix else question
+def build_prompt(tokenizer, prompt_text):
     messages = [
         {"role": "system", "content": SYSTEM_MSG},
-        {"role": "user", "content": content},
+        {"role": "user", "content": prompt_text},
     ]
     return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
