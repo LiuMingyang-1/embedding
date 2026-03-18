@@ -1,0 +1,12 @@
+# Python cache files
+__pycache__/
+*.py[cod]
+
+# Local virtual environment managed by uv
+.venv/
+uv.lock
+.python-version
+dataset/train-00002-of-00026.parquet
+
+# macOS
+.DS_Store
